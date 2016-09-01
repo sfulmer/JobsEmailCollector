@@ -5,18 +5,23 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Window;
-
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import java.io.Serializable;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -37,6 +42,7 @@ import javax.swing.event.AncestorListener;
 import javax.swing.table.TableModel;
 import javax.swing.text.JTextComponent;
 
+import net.draconia.jobsemailcollector.model.Individual;
 import net.draconia.jobsemailcollector.ui.actions.paging.*;
 
 public class ScrollablePageableTable extends JPanel
@@ -173,10 +179,12 @@ public class ScrollablePageableTable extends JPanel
 	{
 		if(mCboPageSize == null)
 			{
-			mCboPageSize = new JComboBox<Integer>(new Integer[] {5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000});
+			mCboPageSize = new JComboBox<Integer>(getModel().getPageSizes().toArray(new Integer[0]));
 			
 			mCboPageSize.setBorder(BorderFactory.createLoweredBevelBorder());
+			mCboPageSize.setEditable(true);
 			mCboPageSize.setFont(getFont());
+			mCboPageSize.addActionListener(new ScrollablePageablePageSizeListener(getModel()));
 			}
 		
 		return(mCboPageSize);
@@ -208,6 +216,8 @@ public class ScrollablePageableTable extends JPanel
 		pnlPaging.add(new JLabel("     "));
 		pnlPaging.add(getPageSizeLabel());
 		pnlPaging.add(getPageSizeField());
+		
+		getModel().addObserver(new ScrollablePageablePageSizeObserver(mTxtTotalPages, getPageSizeField()));
 		
 		return(pnlPaging);
 	}
@@ -267,7 +277,17 @@ public class ScrollablePageableTable extends JPanel
 			mTxtTotalPages.setFont(getFont());
 			mTxtTotalPages.setHorizontalAlignment(JTextField.CENTER);
 			mTxtTotalPages.setOpaque(false);
-			mTxtTotalPages.setText("0");
+			
+			try
+				{
+				mTxtTotalPages.setText(getModel().getPageQuantity().toString());
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				
+				mTxtTotalPages.setText("0");
+				}
 			}
 		
 		return(mTxtTotalPages);
@@ -288,18 +308,62 @@ public class ScrollablePageableTable extends JPanel
 			mTblTable.setModel(mObjTableModel);
 	}
 	
-	protected class ScrollablePageableModel extends Observable implements Serializable
+	protected class ScrollablePageableCurrentPageObserver implements Observer, Serializable
+	{
+		private static final long serialVersionUID = 7281127808347050692L;
+		
+		private JSpinner mSpnCurrentPage;
+		
+		public ScrollablePageableCurrentPageObserver(final JSpinner spnCurrentPage)
+		{
+			setCurrentPageSpinner(spnCurrentPage);
+		}
+		
+		protected JSpinner getCurrentPageSpinner()
+		{
+			return(mSpnCurrentPage);
+		}
+		
+		protected void setCurrentPageSpinner(final JSpinner spnCurrentPage)
+		{
+			mSpnCurrentPage = spnCurrentPage;
+		}
+		
+		public void update(final Observable objObservable, final Object objArgument)
+		{
+			Integer iValue;
+			ScrollablePageableModel objModel = ((ScrollablePageableModel)(objObservable));
+			
+			iValue = objModel.getCurrentPage();
+			
+			if(!getCurrentPageSpinner().getValue().equals(iValue))
+				getCurrentPageSpinner().setValue(iValue);
+		}
+	}
+	
+	public class ScrollablePageableModel extends Observable implements Serializable
 	{
 		private static final long serialVersionUID = -4689051671448612855L;
 		
 		private Class<? extends JDialog> mClsDetailDialog;
 		private Class<?> mClsIdType, mClsRowDataType;
 		private Integer miCurrentPage, miPageSize;
+		private List<Integer> mLstPageSizes;
 		private Object mObjListModel, mObjRowModel, mObjManager;
 		private String msGetDataByIdName, msGetDataListName;
 		
 		public ScrollablePageableModel()
 		{ }
+		
+		public boolean addPageSize(final Integer iPageSize)
+		{
+			boolean bReturnValue = getPageSizesInternal().add(iPageSize);
+			
+			setChanged();
+			notifyObservers();
+			
+			return(bReturnValue);
+		}
 		
 		protected Object convertIdToExpectedIdType(final Object objId) throws IllegalAccessException, IllegalArgumentException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException
 		{
@@ -360,14 +424,14 @@ public class ScrollablePageableTable extends JPanel
 			return(mClsIdType);
 		}
 		
-		public List<?> getList() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
+		public Object getList() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
 		{
 			Method funcGetList = getListModel().getClass().getDeclaredMethod(getGetDataListName(), new Class<?>[0]);
 			
 			if(!funcGetList.isAccessible())
 				funcGetList.setAccessible(true);
 			
-			return((List<?>)(funcGetList.invoke(getListModel(), new Object[0])));
+			return(funcGetList.invoke(getListModel(), new Object[0]));
 		}
 		
 		public Object getListModel()
@@ -382,7 +446,21 @@ public class ScrollablePageableTable extends JPanel
 		
 		public Integer getPageQuantity() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
 		{
-			return(Double.valueOf(Math.ceil(getList().size() / getPageSize())).intValue());
+			int iSize = 0;
+			Method funcSize;
+			Object objList = getList();
+			
+			funcSize = objList.getClass().getDeclaredMethod("size", new Class<?>[0]);
+			
+			if(!funcSize.isAccessible())
+				funcSize.setAccessible(true);
+			
+			iSize = ((int)(funcSize.invoke(objList, new Object[0])));
+			
+			if(getPageSize() > 0)
+				return(Double.valueOf(Math.ceil(iSize / getPageSize())).intValue());
+			else
+				return(1);
 		}
 		
 		public Integer getPageSize()
@@ -391,6 +469,23 @@ public class ScrollablePageableTable extends JPanel
 				miPageSize = 0;
 			
 			return(miPageSize);
+		}
+		
+		public List<Integer> getPageSizes()
+		{
+			return(Collections.unmodifiableList(getPageSizesInternal()));
+		}
+		
+		protected List<Integer> getPageSizesInternal()
+		{
+			if(mLstPageSizes == null)
+				{
+				mLstPageSizes = Collections.synchronizedList(new ArrayList<Integer>());
+				
+				mLstPageSizes.addAll(Arrays.asList(new Integer[] {5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000}));
+				}
+			
+			return(mLstPageSizes);
 		}
 		
 		public Object getRow(final Object objId) throws IllegalAccessException, IllegalArgumentException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException
@@ -411,6 +506,16 @@ public class ScrollablePageableTable extends JPanel
 		public Object getRowModel()
 		{
 			return(mObjRowModel);
+		}
+		
+		public boolean removePageSize(final Integer iPageSize)
+		{
+			boolean bReturnValue = getPageSizesInternal().remove((Object)(iPageSize));
+			
+			setChanged();
+			notifyObservers();
+			
+			return(bReturnValue);
 		}
 		
 		public void setCurrentPage(final Integer iCurrentPage)
@@ -481,7 +586,7 @@ public class ScrollablePageableTable extends JPanel
 		public void setPageSize(final Integer iPageSize)
 		{
 			if(iPageSize == null)
-				miPageSize = 0;
+				miPageSize = getPageSizes().get(0);
 			else
 				miPageSize = iPageSize;
 			
@@ -506,36 +611,43 @@ public class ScrollablePageableTable extends JPanel
 		}
 	}
 	
-	protected class ScrollablePageableCurrentPageObserver implements Observer, Serializable
+	protected class ScrollablePageablePageSizeListener extends AbstractAction
 	{
-		private static final long serialVersionUID = 7281127808347050692L;
+		private static final long serialVersionUID = 6210450269297020248L;
 		
-		private JSpinner mSpnCurrentPage;
+		private ScrollablePageableModel mObjModel;
 		
-		public ScrollablePageableCurrentPageObserver(final JSpinner spnCurrentPage)
+		public ScrollablePageablePageSizeListener(final ScrollablePageableModel objModel)
 		{
-			setCurrentPageSpinner(spnCurrentPage);
+			setModel(objModel);
 		}
 		
-		protected JSpinner getCurrentPageSpinner()
+		@SuppressWarnings("unchecked")
+		public void actionPerformed(final ActionEvent objActionEvent)
 		{
-			return(mSpnCurrentPage);
-		}
-		
-		protected void setCurrentPageSpinner(final JSpinner spnCurrentPage)
-		{
-			mSpnCurrentPage = spnCurrentPage;
-		}
-		
-		public void update(final Observable objObservable, final Object objArgument)
-		{
-			Integer iValue;
-			ScrollablePageableModel objModel = ((ScrollablePageableModel)(objObservable));
+			Integer iControlPageSize, iModelPageSize;
+			JComboBox<Integer> cboPageSize = ((JComboBox<Integer>)(objActionEvent.getSource()));
 			
-			iValue = objModel.getCurrentPage();
+			iControlPageSize = cboPageSize.getSelectedIndex();
+			iModelPageSize = getModel().getPageSize();
 			
-			if(!getCurrentPageSpinner().getValue().equals(iValue))
-				getCurrentPageSpinner().setValue(iValue);
+			if(!iControlPageSize.equals(iModelPageSize))
+				{
+				if(!getModel().getPageSizes().contains(iControlPageSize))
+					getModel().addPageSize(iControlPageSize);
+				
+				getModel().setPageSize(iControlPageSize);
+				}
+		}
+		
+		protected ScrollablePageableModel getModel()
+		{
+			return(mObjModel);
+		}
+		
+		protected void setModel(final ScrollablePageableModel objModel)
+		{
+			mObjModel = objModel;
 		}
 	}
 	

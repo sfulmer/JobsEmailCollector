@@ -12,12 +12,11 @@ public class EmailObserver implements Observer, Serializable
 {
 	private static final long serialVersionUID = -4456932933426293416L;
 	
-	private DatabaseManager mObjDatabaseManager = new DatabaseManager("test.db");
 	private IndividualParser mObjIndividualParser;
 	
 	protected DatabaseManager getDatabaseManager()
 	{
-		return(mObjDatabaseManager);
+		return(getIndividualParser().getModel().getDatabaseManager());
 	}
 	
 	public IndividualParser getIndividualParser()

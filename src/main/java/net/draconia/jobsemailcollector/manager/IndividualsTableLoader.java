@@ -43,6 +43,9 @@ public class IndividualsTableLoader implements Runnable, Serializable
 		
 		try
 			{
+			new IndividualManager(getModel()).createIndividualTable();
+			new EmailManager(getDatabaseManager()).createEmailTable();
+			
 			objConnection = getDatabaseManager().getConnection();
 			objPreparedStatement = objConnection.prepareStatement("select Individual.Id as Id, Individual.Name as Name, (select LatestDate from (select Email.Individual, max(Email.DateReceived) as LatestDate from Email where Email.Individual = Individual.Id group by Email.Individual)) as LastDate from Individual order by Individual.Id");
 			
