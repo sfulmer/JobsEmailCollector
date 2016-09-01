@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Window;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -14,6 +15,7 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,14 +40,16 @@ import javax.swing.SpinnerNumberModel;
 
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import javax.swing.table.TableModel;
+
 import javax.swing.text.JTextComponent;
 
-import net.draconia.jobsemailcollector.model.Individual;
 import net.draconia.jobsemailcollector.ui.actions.paging.*;
 
-public class ScrollablePageableTable extends JPanel
+public class ScrollablePageableTable extends InitializablePanel
 {
 	private static final long serialVersionUID = 2423017759548313902L;
 	
@@ -61,21 +65,7 @@ public class ScrollablePageableTable extends JPanel
 	{
 		super(new BorderLayout(0, 5));
 		
-		addAncestorListener(new AncestorListener()
-		{
-			public void ancestorRemoved(final AncestorEvent objAncestorEvent)
-			{ }
-			
-			public void ancestorMoved(final AncestorEvent objAncestorEvent)
-			{ }
-			
-			public void ancestorAdded(final AncestorEvent objAncestorEvent)
-			{
-				initPanel();
-				
-				((Window)(objAncestorEvent.getAncestor())).pack();
-			}
-		});
+		addAncestorListener(new ScrollablePageableAncestorListener(this));
 		
 		setTableModel(objTableModel);
 	}
@@ -84,12 +74,16 @@ public class ScrollablePageableTable extends JPanel
 	{
 		if(mSpnCurrentPage == null)
 			{
-			mSpnCurrentPage = new JSpinner(new SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), ((Integer)(getPageSizeField().getSelectedItem())), Integer.valueOf(1)));
+			SpinnerNumberModel objSpinnerModel = new SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), Integer.valueOf(getTotalPagesField().getText()), Integer.valueOf(1));
+			
+			objSpinnerModel.addChangeListener(new ScrollablePageableCurrentPageChangeListener(getModel()));
+			
+			mSpnCurrentPage = new JSpinner(objSpinnerModel);
 			
 			mSpnCurrentPage.setBorder(BorderFactory.createLoweredBevelBorder());
 			mSpnCurrentPage.setFont(getFont());
 			
-			getModel().addObserver(new ScrollablePageableCurrentPageObserver(mSpnCurrentPage));
+			getModel().addObserver(new ScrollablePageableCurrentPageObserver((SpinnerNumberModel)(mSpnCurrentPage.getModel()), getFirstPageAction(), getLastPageAction(), getNextPageAction(), getPreviousPageAction()));
 			}
 		
 		return(mSpnCurrentPage);
@@ -98,7 +92,11 @@ public class ScrollablePageableTable extends JPanel
 	protected Action getFirstPageAction()
 	{
 		if(mActFirstPage == null)
+			{
 			mActFirstPage = new FirstPage();
+			
+			mActFirstPage.setEnabled(false);
+			}
 		
 		return(mActFirstPage);
 	}
@@ -115,7 +113,26 @@ public class ScrollablePageableTable extends JPanel
 	protected Action getLastPageAction()
 	{
 		if(mActLastPage == null)
+			{
+			Integer iCurrentPage, iPageQuantity;
+			
 			mActLastPage = new LastPage();
+			
+			iCurrentPage = getModel().getCurrentPage();
+			
+			try
+				{
+				iPageQuantity = getModel().getPageQuantity();
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				
+				iPageQuantity = 0;
+				}
+			
+			mActLastPage.setEnabled(iPageQuantity > iCurrentPage);
+			}
 		
 		return(mActLastPage);
 	}
@@ -140,7 +157,26 @@ public class ScrollablePageableTable extends JPanel
 	protected Action getNextPageAction()
 	{
 		if(mActNextPage == null)
+			{
+			Integer iCurrentPage, iPageQuantity;
+			
 			mActNextPage = new NextPage();
+			
+			iCurrentPage = getModel().getCurrentPage();
+			
+			try
+				{
+				iPageQuantity = getModel().getPageQuantity();
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				
+				iPageQuantity = 0;
+				}
+			
+			mActNextPage.setEnabled(iPageQuantity > iCurrentPage);
+			}
 		
 		return(mActNextPage);
 	}
@@ -217,7 +253,7 @@ public class ScrollablePageableTable extends JPanel
 		pnlPaging.add(getPageSizeLabel());
 		pnlPaging.add(getPageSizeField());
 		
-		getModel().addObserver(new ScrollablePageablePageSizeObserver(mTxtTotalPages, getPageSizeField()));
+		getModel().addObserver(new ScrollablePageablePageSizeObserver(mTxtTotalPages, getPageSizeField(), ((SpinnerNumberModel)(getCurrentPageField().getModel()))));
 		
 		return(pnlPaging);
 	}
@@ -225,7 +261,11 @@ public class ScrollablePageableTable extends JPanel
 	protected Action getPreviousPageAction()
 	{
 		if(mActPreviousPage == null)
+			{
 			mActPreviousPage = new PreviousPage();
+			
+			mActPreviousPage.setEnabled(false);
+			}
 		
 		return(mActPreviousPage);
 	}
@@ -308,36 +348,179 @@ public class ScrollablePageableTable extends JPanel
 			mTblTable.setModel(mObjTableModel);
 	}
 	
+	protected class ScrollablePageableAncestorListener implements AncestorListener, Serializable
+	{
+		private static final long serialVersionUID = -6681341010511604293L;
+		
+		private InitializablePanel mObjPanel;
+		
+		public ScrollablePageableAncestorListener(final InitializablePanel objPanel)
+		{
+			setPanel(objPanel);
+		}
+		
+		public void ancestorAdded(final AncestorEvent objAncestorEvent)
+		{
+			try
+				{
+				Method funcInit = getPanel().getClass().getDeclaredMethod("initPanel", new Class<?>[0]);
+				
+				if(!funcInit.isAccessible())
+					funcInit.setAccessible(true);
+				
+				funcInit.invoke(getPanel(), new Object[0]);
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				}
+			
+			((Window)(objAncestorEvent.getAncestor())).pack();
+		}
+		
+		public void ancestorMoved(final AncestorEvent objAncestorEvent)
+		{ }
+		
+		public void ancestorRemoved(final AncestorEvent objAncestorEvent)
+		{ }
+		
+		protected InitializablePanel getPanel()
+		{
+			return(mObjPanel);
+		}
+		
+		protected void setPanel(final InitializablePanel objPanel)
+		{
+			mObjPanel = objPanel;
+		}
+	}
+	
+	protected class ScrollablePageableCurrentPageChangeListener implements ChangeListener, Serializable
+	{
+		private static final long serialVersionUID = -8037573015036453977L;
+		
+		private ScrollablePageableModel mObjModel;
+		
+		public ScrollablePageableCurrentPageChangeListener(final ScrollablePageableModel objModel)
+		{
+			setModel(objModel);
+		}
+		
+		protected ScrollablePageableModel getModel()
+		{
+			return(mObjModel);
+		}
+		
+		protected void setModel(final ScrollablePageableModel objModel)
+		{
+			mObjModel = objModel;
+		}
+		
+		public void stateChanged(final ChangeEvent objChangeEvent)
+		{
+			SpinnerNumberModel objSpinnerModel = ((SpinnerNumberModel)(objChangeEvent.getSource()));
+			
+			if(!getModel().getCurrentPage().equals(objSpinnerModel.getValue()))
+				getModel().setCurrentPage((Integer)(objSpinnerModel.getValue()));
+		}
+	}
+	
 	protected class ScrollablePageableCurrentPageObserver implements Observer, Serializable
 	{
 		private static final long serialVersionUID = 7281127808347050692L;
 		
-		private JSpinner mSpnCurrentPage;
+		private Action mActFirst, mActLast, mActNext, mActPrevious;
+		private SpinnerNumberModel mObjCurrentPageSpinnerModel;
 		
-		public ScrollablePageableCurrentPageObserver(final JSpinner spnCurrentPage)
+		public ScrollablePageableCurrentPageObserver(final SpinnerNumberModel objCurrentPageSpinnerModel, final Action actFirst, final Action actLast, final Action actNext, final Action actPrevious)
 		{
-			setCurrentPageSpinner(spnCurrentPage);
+			setCurrentPageSpinnerModel(objCurrentPageSpinnerModel);
+			setFirstAction(actFirst);
+			setLastAction(actLast);
+			setNextAction(actNext);
+			setPreviousAction(actPrevious);
 		}
 		
-		protected JSpinner getCurrentPageSpinner()
+		protected SpinnerNumberModel getCurrentPageSpinnerModel()
 		{
-			return(mSpnCurrentPage);
+			return(mObjCurrentPageSpinnerModel);
 		}
 		
-		protected void setCurrentPageSpinner(final JSpinner spnCurrentPage)
+		protected Action getFirstAction()
 		{
-			mSpnCurrentPage = spnCurrentPage;
+			return(mActFirst);
+		}
+		
+		protected Action getLastAction()
+		{
+			return(mActLast);
+		}
+		
+		protected Action getNextAction()
+		{
+			return(mActNext);
+		}
+		
+		protected Action getPreviousAction()
+		{
+			return(mActPrevious);
+		}
+		
+		protected void setCurrentPageSpinnerModel(final SpinnerNumberModel objCurrentPageSpinnerModel)
+		{
+			mObjCurrentPageSpinnerModel = objCurrentPageSpinnerModel;
+		}
+		
+		protected void setFirstAction(final Action actFirst)
+		{
+			mActFirst = actFirst;
+		}
+		
+		protected void setLastAction(final Action actLast)
+		{
+			mActLast = actLast;
+		}
+		
+		protected void setNextAction(final Action actNext)
+		{
+			mActNext = actNext;
+		}
+		
+		protected void setPreviousAction(final Action actPrevious)
+		{
+			mActPrevious = actPrevious;
 		}
 		
 		public void update(final Observable objObservable, final Object objArgument)
 		{
-			Integer iValue;
+			Integer iPageQuantity, iValue;
 			ScrollablePageableModel objModel = ((ScrollablePageableModel)(objObservable));
 			
 			iValue = objModel.getCurrentPage();
 			
-			if(!getCurrentPageSpinner().getValue().equals(iValue))
-				getCurrentPageSpinner().setValue(iValue);
+			if(!getCurrentPageSpinnerModel().getValue().equals(iValue))
+				getCurrentPageSpinnerModel().setValue(iValue);
+			
+			try
+				{
+				iPageQuantity = objModel.getPageQuantity();
+				}
+			catch(IllegalAccessException  | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				iPageQuantity = 0;
+				}
+			
+			if(iValue > 1)
+				{
+				getFirstAction().setEnabled(true);
+				getPreviousAction().setEnabled(true);
+				}
+			if(iValue < iPageQuantity)
+				{
+				getLastAction().setEnabled(true);
+				getNextAction().setEnabled(true);
+				}
 		}
 	}
 	
@@ -466,7 +649,10 @@ public class ScrollablePageableTable extends JPanel
 		public Integer getPageSize()
 		{
 			if(miPageSize == null)
-				miPageSize = 0;
+				if(getPageSizes().size() > 0)
+					miPageSize = getPageSizes().get(0);
+				else
+					miPageSize = 0;
 			
 			return(miPageSize);
 		}
@@ -567,6 +753,18 @@ public class ScrollablePageableTable extends JPanel
 			notifyObservers();
 		}
 		
+		/**
+		 * Method to provide a way to update this model when the data changes 
+		 * even though I'm accumulating the model's data through getList()
+		 * 
+		 * @param objList {@link Object} Could be List or Map - if I stabilize it I may specialize the type
+		 */
+		public void setList(final Object objList)
+		{
+			setChanged();
+			notifyObservers();
+		}
+		
 		public void setListModel(final Object objListModel)
 		{
 			mObjListModel = objListModel;
@@ -657,11 +855,18 @@ public class ScrollablePageableTable extends JPanel
 		
 		private JComboBox<Integer> mCboPageSize;
 		private JTextComponent mTxtMaxPage;
+		private SpinnerNumberModel mObjCurrentPageSpinnerModel;
 		
-		public ScrollablePageablePageSizeObserver(final JTextComponent txtMaxPage, final JComboBox<Integer> cboPageSize)
+		public ScrollablePageablePageSizeObserver(final JTextComponent txtMaxPage, final JComboBox<Integer> cboPageSize, final SpinnerNumberModel objCurrentPageSpinnerModel)
 		{
+			setCurrentPageSpinnerModel(objCurrentPageSpinnerModel);
 			setMaxPageField(txtMaxPage);
 			setPageSizeField(cboPageSize);
+		}
+		
+		protected SpinnerNumberModel getCurrentPageSpinnerModel()
+		{
+			return(mObjCurrentPageSpinnerModel);
 		}
 		
 		protected JTextComponent getMaxPageField()
@@ -672,6 +877,11 @@ public class ScrollablePageableTable extends JPanel
 		protected JComboBox<Integer> getPageSizeField()
 		{
 			return(mCboPageSize);
+		}
+		
+		protected void setCurrentPageSpinnerModel(final SpinnerNumberModel objCurrentPageSpinerModel)
+		{
+			mObjCurrentPageSpinnerModel = objCurrentPageSpinerModel;
 		}
 		
 		protected void setMaxPageField(final JTextComponent txtMaxPage)
@@ -694,9 +904,13 @@ public class ScrollablePageableTable extends JPanel
 			if(!getPageSizeField().getSelectedItem().equals(iPageSize))
 				try
 					{
+					Integer iPageQuantity = objModel.getPageQuantity();
+					
+					getCurrentPageSpinnerModel().setMaximum(iPageQuantity);
+					
 					getPageSizeField().setSelectedItem(iPageSize);
 					
-					getMaxPageField().setText(objModel.getPageQuantity().toString());
+					getMaxPageField().setText(iPageQuantity.toString());
 					}
 				catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
 					{

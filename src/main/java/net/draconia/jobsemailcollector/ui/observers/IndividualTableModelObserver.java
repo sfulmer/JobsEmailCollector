@@ -33,6 +33,6 @@ public class IndividualTableModelObserver implements Observer, Serializable
 	{
 		Model objModel = ((Model)(objObservable));
 		
-		//TODO: Need to update ScrollablePageableModel, which will throw its own observers
+		getModel().setList(objModel.getTableData());
 	}
 }

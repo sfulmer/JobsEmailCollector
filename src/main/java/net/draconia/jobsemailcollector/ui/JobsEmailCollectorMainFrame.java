@@ -29,12 +29,16 @@ import net.draconia.jobsemailcollector.model.Model;
 import net.draconia.jobsemailcollector.observers.FileListImportJobsObserver;
 import net.draconia.jobsemailcollector.observers.FileListObserver;
 
+import net.draconia.jobsemailcollector.ui.ScrollablePageableTable.ScrollablePageableModel;
+
 import net.draconia.jobsemailcollector.ui.actions.BrowseFiles;
 import net.draconia.jobsemailcollector.ui.actions.ImportJobs;
 import net.draconia.jobsemailcollector.ui.actions.Quit;
 
 import net.draconia.jobsemailcollector.ui.model.FileListModel;
 import net.draconia.jobsemailcollector.ui.model.IndividualTableModel;
+
+import net.draconia.jobsemailcollector.ui.observers.IndividualTableModelObserver;
 import net.draconia.jobsemailcollector.ui.observers.TableDataLoaderObserver;
 
 public class JobsEmailCollectorMainFrame extends JFrame
@@ -163,7 +167,7 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		getModel().addObserver(new TableDataLoaderObserver(objTableModel));
 		
 		pnlIndividuals = new ScrollablePageableTable(objTableModel);
-		ScrollablePageableTable.ScrollablePageableModel objModel = ((ScrollablePageableTable)(pnlIndividuals)).getModel();
+		ScrollablePageableModel objModel = ((ScrollablePageableTable)(pnlIndividuals)).getModel();
 		
 		objModel.setListModel(getModel());
 		objModel.setManager(objIndividualManager);
@@ -173,6 +177,8 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		objModel.setGetDataListName("getTableData");
 		objModel.setIdType(Integer.class);
 		objModel.setRowDataType(Individual.class);
+		
+		getModel().addObserver(new IndividualTableModelObserver(objModel));
 		
 		return(pnlIndividuals);
 	}
