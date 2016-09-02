@@ -10,6 +10,7 @@ import java.awt.Insets;
 import java.awt.event.KeyEvent;
 
 import java.io.File;
+import java.util.Date;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -29,17 +30,16 @@ import net.draconia.jobsemailcollector.model.Model;
 import net.draconia.jobsemailcollector.observers.FileListImportJobsObserver;
 import net.draconia.jobsemailcollector.observers.FileListObserver;
 
-import net.draconia.jobsemailcollector.ui.ScrollablePageableTable.ScrollablePageableModel;
-
 import net.draconia.jobsemailcollector.ui.actions.BrowseFiles;
 import net.draconia.jobsemailcollector.ui.actions.ImportJobs;
 import net.draconia.jobsemailcollector.ui.actions.Quit;
 
 import net.draconia.jobsemailcollector.ui.model.FileListModel;
-import net.draconia.jobsemailcollector.ui.model.IndividualTableModel;
 
 import net.draconia.jobsemailcollector.ui.observers.IndividualTableModelObserver;
-import net.draconia.jobsemailcollector.ui.observers.TableDataLoaderObserver;
+import net.draconia.jobsemailcollector.ui.table.ScrollablePageableTable;
+import net.draconia.jobsemailcollector.ui.table.model.Column;
+import net.draconia.jobsemailcollector.ui.table.model.ScrollablePageableModel;
 
 public class JobsEmailCollectorMainFrame extends JFrame
 {
@@ -159,14 +159,19 @@ public class JobsEmailCollectorMainFrame extends JFrame
 	protected JPanel getIndividualsPanel()
 	{
 		IndividualManager objIndividualManager = new IndividualManager(getModel());
-		IndividualTableModel objTableModel = new IndividualTableModel(getModel().getTableData());
+		//IndividualTableModel objTableModel = new IndividualTableModel(getModel().getTableData());
 		JPanel pnlIndividuals;
 		
 		new Thread(new IndividualsTableLoader(getModel())).start();
 		
-		getModel().addObserver(new TableDataLoaderObserver(objTableModel));
+		//getModel().addObserver(new TableDataLoaderObserver(objTableModel));
 		
-		pnlIndividuals = new ScrollablePageableTable(objTableModel);
+		//pnlIndividuals = new ScrollablePageableTable(objTableModel);
+		pnlIndividuals = new ScrollablePageableTable(new Column[]
+		{	new Column("Id", Integer.class, Individual.class, "getId")
+		,	new Column("Name", String.class, Individual.class, "getName")
+		,	new Column("Last Email Contact", Date.class, Individual.class, "getDateOfLastEmail")
+		});
 		ScrollablePageableModel objModel = ((ScrollablePageableTable)(pnlIndividuals)).getModel();
 		
 		objModel.setListModel(getModel());

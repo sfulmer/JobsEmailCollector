@@ -6,7 +6,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import net.draconia.jobsemailcollector.model.Model;
-import net.draconia.jobsemailcollector.ui.ScrollablePageableTable.ScrollablePageableModel;
+import net.draconia.jobsemailcollector.ui.table.model.ScrollablePageableModel;
 
 public class IndividualTableModelObserver implements Observer, Serializable
 {
