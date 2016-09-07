@@ -216,7 +216,7 @@ public class PagingPanel extends InitializablePanel
 			
 			try
 				{
-				if(getModel().getListSize() > 0)
+				if(((Number)(getModel().getCollectionSize())).longValue() > 0)
 					{
 					mLblPageSize.setEnabled(true);
 					mLblPageSize.getLabelFor().setEnabled(true);

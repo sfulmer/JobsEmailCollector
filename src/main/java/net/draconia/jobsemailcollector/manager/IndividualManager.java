@@ -6,7 +6,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
+import net.draconia.jobsemailcollector.model.Column;
+import net.draconia.jobsemailcollector.model.FilterList;
 import net.draconia.jobsemailcollector.model.Individual;
 import net.draconia.jobsemailcollector.model.Model;
 
@@ -37,6 +44,26 @@ public class IndividualManager implements Serializable
 	public DatabaseManager getDatabaseManager()
 	{
 		return(getModel().getDatabaseManager());
+	}
+	
+	public Long getIndividualCount() throws SQLException
+	{
+		Connection objConnection = null;
+		PreparedStatement objPreparedStatement = null;
+		ResultSet objResultSet = null;
+		
+		objConnection = getConnection();
+		
+		if(!getDatabaseManager().tableExists("Individual"))
+			createIndividualTable();
+		
+		objPreparedStatement = objConnection.prepareStatement("select count(Id) from Individual;");
+		objResultSet = objPreparedStatement.executeQuery();
+		
+		if(objResultSet.next())
+			return(objResultSet.getLong(1));
+		else
+			return(0L);
 	}
 	
 	public Individual getIndividualById(final Integer iId) throws SQLException
@@ -119,9 +146,67 @@ public class IndividualManager implements Serializable
 			}
 	}
 	
+	public List<Individual> getIndividuals(final int iPage, final int iPageSize) throws SQLException
+	{
+		return(getIndividuals(null, iPage, iPageSize));
+	}
+	
+	public List<Individual> getIndividuals(final FilterList lstFilters, final int iPage, final int iPageSize) throws SQLException
+	{
+		Connection objConnection = null;
+		List<Individual> lstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
+		PreparedStatement objPreparedStatement = null;
+		ResultSet objResultSet = null;
+		String sSQL = getSelectSQL	(	new Column[]
+										{	new Column("Individual", "Id", "Individual.Id")
+										,	new Column("Individual", "Name", "Individual.Name")
+										}
+									,	new String[]
+										{	"Individual"	}
+									,	lstFilters
+									, 	iPage
+									, 	iPageSize
+									);
+		
+		objConnection = getConnection();
+		objPreparedStatement = objConnection.prepareStatement(sSQL);
+		
+		objResultSet = objPreparedStatement.executeQuery();
+		
+		while(objResultSet.next())
+			{
+			Individual objIndividual = new Individual();
+			
+			objIndividual.setId(objResultSet.getInt("Id"));
+			objIndividual.setName(objResultSet.getString("Name"));
+			objIndividual.setEmail(new EmailManager(getDatabaseManager()).getEmailByIndividual(objIndividual));
+			
+			objIndividual.addEmailAddresses(new EmailAddressManager(getDatabaseManager()).getEmailAddressesByIndividual(objIndividual));
+			objIndividual.addPhoneNumbers(new PhoneNumberManager(getDatabaseManager()).getPhoneNumbersByIndividual(objIndividual));
+			}
+		
+		return(lstIndividuals);
+	}
+	
 	public Model getModel()
 	{
 		return(mObjModel);
+	}
+	
+	protected String getSelectSQL(final Column[] arrObjColumns, final String[] sArrTables, final FilterList lstFilters)
+	{
+		return(getSelectSQL(arrObjColumns, sArrTables, lstFilters, null, null));
+	}
+	
+	protected String getSelectSQL(final Column[] arrObjColumns, final String[] sArrTables, final FilterList lstFilters, final Integer iPage, final Integer iPageSize)
+	{
+		String sSQL = "select ";
+		
+		sSQL = sSQL.concat(StringUtils.join(arrObjColumns, ", "));
+		
+		sSQL = sSQL.concat(" from Individual");
+		
+		return(sSQL);
 	}
 	
 	public Individual insertIndividual(Individual objIndividual) throws SQLException

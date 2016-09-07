@@ -93,7 +93,9 @@ public class ScrollablePageableTable extends InitializablePanel
 	protected void initPanel()
 	{
 		add(getScrollPanel(), BorderLayout.CENTER);
-		add(getPagingPanel(), BorderLayout.SOUTH);
+		
+		if(getModel().isPageable())
+			add(getPagingPanel(), BorderLayout.SOUTH);
 	}
 	
 	public void setTableModel(final TableModel objTableModel)

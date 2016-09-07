@@ -63,7 +63,7 @@ public class IndividualsTableLoader implements Runnable, Serializable
 				iId = objResultSet.getInt("Id");
 				sName = objResultSet.getString("Name");
 				
-				getModel().addTableData(new ShallowIndividual(iId, sName, dtLast));
+				//getModel().addTableData(new ShallowIndividual(iId, sName, dtLast));
 				
 				Thread.yield();
 				}

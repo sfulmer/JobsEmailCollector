@@ -10,6 +10,7 @@ import java.awt.Insets;
 import java.awt.event.KeyEvent;
 
 import java.io.File;
+
 import java.util.Date;
 
 import javax.swing.Action;
@@ -22,7 +23,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import net.draconia.jobsemailcollector.manager.IndividualManager;
-import net.draconia.jobsemailcollector.manager.IndividualsTableLoader;
 
 import net.draconia.jobsemailcollector.model.Individual;
 import net.draconia.jobsemailcollector.model.Model;
@@ -159,14 +159,11 @@ public class JobsEmailCollectorMainFrame extends JFrame
 	protected JPanel getIndividualsPanel()
 	{
 		IndividualManager objIndividualManager = new IndividualManager(getModel());
-		//IndividualTableModel objTableModel = new IndividualTableModel(getModel().getTableData());
 		JPanel pnlIndividuals;
 		
-		new Thread(new IndividualsTableLoader(getModel())).start();
+		//new Thread(new IndividualsTableLoader(getModel())).start();
 		
 		//getModel().addObserver(new TableDataLoaderObserver(objTableModel));
-		
-		//pnlIndividuals = new ScrollablePageableTable(objTableModel);
 		pnlIndividuals = new ScrollablePageableTable(new Column[]
 		{	new Column("Id", Integer.class, Individual.class, "getId")
 		,	new Column("Name", String.class, Individual.class, "getName")
@@ -174,14 +171,16 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		});
 		ScrollablePageableModel objModel = ((ScrollablePageableTable)(pnlIndividuals)).getModel();
 		
-		objModel.setListModel(getModel());
+		objModel.setCollectionModel(getModel());
 		objModel.setManager(objIndividualManager);
-		objModel.setRowModel(objIndividualManager);
 		objModel.setDetailDialogClass(IndividualDetailDialog.class);
-		objModel.setGetDataByIdName("getIndividualById");
-		objModel.setGetDataListName("getTableData");
+		objModel.setGetCollectionSizeName("getIndividualCount");
+		objModel.setGetDataCollectionName("getIndividuals");
+		objModel.setGetRowByIndexName("get");
 		objModel.setIdType(Integer.class);
+		objModel.setPageable(true);
 		objModel.setRowDataType(Individual.class);
+		objModel.setRowKeyType(Object.class);
 		
 		getModel().addObserver(new IndividualTableModelObserver(objModel));
 		

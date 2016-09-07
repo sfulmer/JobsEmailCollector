@@ -39,7 +39,7 @@ public class InitializablePanelAncestorListener implements AncestorListener, Ser
 			objException.printStackTrace(System.err);
 			}
 		
-		((Window)(objAncestorEvent.getAncestor())).pack();
+		((Window)(objAncestorEvent.getComponent().getTopLevelAncestor())).pack();
 	}
 	
 	public void ancestorMoved(final AncestorEvent objAncestorEvent)

@@ -19,13 +19,16 @@ public class ScrollablePageableModel extends Observable implements Serializable
 {
 	private static final long serialVersionUID = -4689051671448612855L;
 	
+	private Boolean mbPageable;
 	private Class<? extends JDialog> mClsDetailDialog;
-	private Class<?> mClsIdType, mClsRowDataType;
+	private Class<?> mClsCollectionSizeType, mClsIdType;
+	private Class<?> mClsRowDataType, mClsRowKeyType;
+	private Integer miCurrentPage, miPageRowCount, miPageSize;
 	private List<Column> mLstColumns;
-	private Integer miCurrentPage, miPageSize;
 	private List<Integer> mLstPageSizes;
-	private Object mObjListModel, mObjRowModel, mObjManager;
-	private String msGetDataByIdName, msGetDataListName;
+	private Object mObjCollection, mObjCollectionModel, mObjCollectionSizeModel;
+	private Object mObjManager, mObjRowModel;
+	private String msGetCollectionSizeName, msGetDataCollectionName, msGetRowByIndexName;
 	
 	public ScrollablePageableModel()
 	{ }
@@ -114,23 +117,74 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	
 	public void firstPage()
 	{
-		int iListSize;
+		Number nCollectionSize;
 		
 		try
 			{
-			iListSize = getListSize();
+			nCollectionSize = ((Number)(getCollectionSize()));
 			}
 		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
 			{
 			objException.printStackTrace(System.err);
 			
-			iListSize = 0;
+			nCollectionSize = Integer.valueOf(0);
 			}
 		
-		if(iListSize > 0)
+		if(nCollectionSize.longValue() > 0)
 			setCurrentPage(1);
 		else
 			setCurrentPage(0);
+	}
+	
+	public Object getCollection() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
+	{
+		if(mObjCollection == null)
+			{
+			Method funcGetCollection = getCollectionModel().getClass().getDeclaredMethod(getGetDataCollectionName(), new Class<?>[0]);
+			
+			if(!funcGetCollection.isAccessible())
+				funcGetCollection.setAccessible(true);
+			
+			mObjCollection = funcGetCollection.invoke(getCollectionModel(), new Object[0]);
+			}
+		
+		return(mObjCollection);
+	}
+	
+	public Object getCollectionModel()
+	{
+		return(mObjCollectionModel);
+	}
+	
+	public Object getCollectionSize() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
+	{
+		Object objCollectionSizeModel = getCollectionSizeModel(), objSize;
+		Method funcSize;
+		
+		funcSize = objCollectionSizeModel.getClass().getDeclaredMethod(getGetCollectionSizeName(), new Class<?>[0]);
+		
+		if(!funcSize.isAccessible())
+			funcSize.setAccessible(true);
+		
+		objSize = funcSize.invoke(objCollectionSizeModel, new Object[0]);
+		
+		return(objSize);
+	}
+	
+	public Object getCollectionSizeModel()
+	{
+		if(mObjCollectionSizeModel == null)
+			mObjCollectionSizeModel = getManager();
+		
+		return(mObjCollectionSizeModel);
+	}
+	
+	public Class<?> getCollectionSizeType()
+	{
+		if(mClsCollectionSizeType == null)
+			mClsCollectionSizeType = Long.class;
+		
+		return(mClsCollectionSizeType);
 	}
 	
 	public List<Column> getColumns()
@@ -151,7 +205,7 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		if(miCurrentPage == null)
 			try
 				{
-				if(getListSize() > 0)
+				if(((Number)(getCollectionSize())).longValue() > 0)
 					miCurrentPage = 1;
 				else
 					miCurrentPage = 0;
@@ -171,20 +225,28 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		return(mClsDetailDialog);
 	}
 	
-	public String getGetDataByIdName()
+	public String getGetCollectionSizeName()
 	{
-		if(msGetDataByIdName == null)
-			msGetDataByIdName = "";
+		if(msGetCollectionSizeName == null)
+			msGetCollectionSizeName = "";
 		
-		return(msGetDataByIdName);
+		return(msGetCollectionSizeName);
 	}
 	
-	public String getGetDataListName()
+	public String getGetDataCollectionName()
 	{
-		if(msGetDataListName == null)
-			msGetDataListName = "";
+		if(msGetDataCollectionName == null)
+			msGetDataCollectionName = "";
 		
-		return(msGetDataListName);
+		return(msGetDataCollectionName);
+	}
+	
+	public String getGetRowByIndexName()
+	{
+		if(msGetRowByIndexName == null)
+			msGetRowByIndexName = "";
+		
+		return(msGetRowByIndexName);
 	}
 	
 	public Class<?> getIdType()
@@ -195,37 +257,6 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		return(mClsIdType);
 	}
 	
-	public Object getList() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
-	{
-		Method funcGetList = getListModel().getClass().getDeclaredMethod(getGetDataListName(), new Class<?>[0]);
-		
-		if(!funcGetList.isAccessible())
-			funcGetList.setAccessible(true);
-		
-		return(funcGetList.invoke(getListModel(), new Object[0]));
-	}
-	
-	public Object getListModel()
-	{
-		return(mObjListModel);
-	}
-	
-	public int getListSize() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
-	{
-		int iSize = 0;
-		Method funcSize;
-		Object objList = getList();
-		
-		funcSize = objList.getClass().getDeclaredMethod("size", new Class<?>[0]);
-		
-		if(!funcSize.isAccessible())
-			funcSize.setAccessible(true);
-		
-		iSize = ((int)(funcSize.invoke(objList, new Object[0])));
-		
-		return(iSize);
-	}
-	
 	public Object getManager()
 	{
 		return(mObjManager);
@@ -233,12 +264,59 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	
 	public Integer getPageQuantity() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
 	{
-		int iSize = getListSize();
+		long lSize = ((Number)(getCollectionSize())).longValue();
 		
 		if(getPageSize() > 0)
-			return(Double.valueOf(Math.ceil(iSize / Double.valueOf(getPageSize()))).intValue());
+			return(Double.valueOf(Math.ceil(lSize / Double.valueOf(getPageSize()))).intValue());
 		else
 			return(1);
+	}
+	
+	public int getPageRowCount()
+	{
+		return(getPageRowCount(getCurrentPage()));
+	}
+	
+	public int getPageRowCount(final Integer iPage)
+	{
+		if(miPageRowCount == null)
+			{
+			int iCollectionSize;
+			
+			try
+				{
+				iCollectionSize = ((Number)(getCollectionSize())).intValue();
+				}
+			catch(IllegalAccessException  | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace();
+				
+				iCollectionSize = 0;
+				}
+			
+			if(iPage == null)
+				return(iCollectionSize);
+			else
+				{
+				int iPageSize = getPageSize(), iRecordCountCurrentPage = iPageSize * iPage;
+				
+				if(iPage > 1)
+					{
+					int iRecordCountPageMinusOne = (iPageSize * (iPage - 1));
+					
+					if(iRecordCountCurrentPage > iCollectionSize)
+						miPageRowCount = (iCollectionSize - iRecordCountPageMinusOne);
+					else
+						miPageRowCount = (iRecordCountCurrentPage - iRecordCountPageMinusOne);
+					}
+				else if(iRecordCountCurrentPage > iCollectionSize)
+					miPageRowCount = (iCollectionSize - iRecordCountCurrentPage);
+				else
+					miPageRowCount = iRecordCountCurrentPage;
+				}
+			}
+		
+		return(miPageRowCount);
 	}
 	
 	public Integer getPageSize()
@@ -271,22 +349,12 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	
 	public Object getRow(final Integer iRowIndex) throws IllegalAccessException, IllegalArgumentException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException
 	{
-		Method funcGet = getList().getClass().getDeclaredMethod("get", new Class<?>[] {Integer.class});
+		Method funcGet = getRowModel().getClass().getDeclaredMethod(getGetRowByIndexName(), new Class<?>[] {getRowKeyType()});
 		
 		if(!funcGet.isAccessible())
 			funcGet.setAccessible(true);
 		
-		return(funcGet.invoke(getListModel(), new Object[] {iRowIndex}));
-	}
-	
-	public Object getRow(final Object objId) throws IllegalAccessException, IllegalArgumentException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException
-	{
-		Method funcGetRowById = getRowModel().getClass().getDeclaredMethod(getGetDataByIdName(), new Class<?>[] {getIdType()});
-		
-		if(!funcGetRowById.isAccessible())
-			funcGetRowById.setAccessible(true);
-		
-		return(funcGetRowById.invoke(getRowModel(), new Object[] {convertIdToExpectedIdType(objId)}));
+		return(funcGet.invoke(getCollection(), new Object[] {iRowIndex}));
 	}
 	
 	public Class<?> getRowDataType()
@@ -294,9 +362,32 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		return(mClsRowDataType);
 	}
 	
+	public Class<?> getRowKeyType()
+	{
+		return(mClsRowKeyType);
+	}
+	
 	public Object getRowModel()
 	{
+		if(mObjRowModel == null)
+			try
+				{
+				mObjRowModel = getCollection();
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				}
+		
 		return(mObjRowModel);
+	}
+	
+	public boolean isPageable()
+	{
+		if(mbPageable == null)
+			mbPageable = false;
+		
+		return(mbPageable);
 	}
 	
 	public void lastPage()
@@ -396,12 +487,65 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		return(bReturnValue);
 	}
 	
+	protected void resetPageRowCount()
+	{
+		miPageRowCount = null;
+	}
+	
+	/**
+	 * Method to provide a way to update this model when the data changes 
+	 * even though I'm accumulating the model's data through getCollection()
+	 * 
+	 * @param objCollection {@link Object} Could be List or Map - if I stabilize it I may specialize the type but I can't specialize it to Collection because Maps aren't Collections
+	 */
+	public void setCollection(final Object objCollection)
+	{
+		if(objCollection != null)
+			mObjCollection = objCollection;
+		
+		setChanged();
+		notifyObservers();
+			
+	}
+	
+	public void setCollectionModel(final Object objCollectionModel)
+	{
+		mObjCollectionModel = objCollectionModel;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
+	public void setCollectionSizeModel(final Object objCollectionSizeModel)
+	{
+		if(objCollectionSizeModel == null)
+			mObjCollectionSizeModel = getManager();
+		else
+			mObjCollectionSizeModel = objCollectionSizeModel;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
+	public void setCollectionSizeType(final Class<?> clsCollectionSizeType)
+	{
+		if(clsCollectionSizeType == null)
+			mClsCollectionSizeType = Long.class;
+		else
+			mClsCollectionSizeType = clsCollectionSizeType;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
 	public void setCurrentPage(final Integer iCurrentPage)
 	{
 		if(iCurrentPage == null)
 			miCurrentPage = 0;
 		else
 			miCurrentPage = iCurrentPage;
+		
+		resetPageRowCount();
 		
 		setChanged();
 		notifyObservers();
@@ -415,23 +559,34 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		notifyObservers();
 	}
 	
-	public void setGetDataByIdName(final String sGetDataByIdName)
+	public void setGetCollectionSizeName(final String sGetCollectionsSizeName)
 	{
-		if(sGetDataByIdName == null)
-			msGetDataByIdName = "";
+		if(sGetCollectionsSizeName == null)
+			msGetCollectionSizeName = "getIndividualCount";
 		else
-			msGetDataByIdName = sGetDataByIdName;
+			msGetCollectionSizeName = sGetCollectionsSizeName;
 		
 		setChanged();
 		notifyObservers();
 	}
 	
-	public void setGetDataListName(final String sGetDataListName)
+	public void setGetDataCollectionName(final String sGetDataCollectionName)
 	{
-		if(sGetDataListName == null)
-			msGetDataListName = "";
+		if(sGetDataCollectionName == null)
+			msGetDataCollectionName = "getTableData";
 		else
-			msGetDataListName = sGetDataListName;
+			msGetDataCollectionName = sGetDataCollectionName;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
+	public void setGetRowByIndexName(final String sGetRowByIndexName)
+	{
+		if(sGetRowByIndexName == null)
+			msGetRowByIndexName = "get";
+		else
+			msGetRowByIndexName = sGetRowByIndexName;
 		
 		setChanged();
 		notifyObservers();
@@ -445,29 +600,20 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		notifyObservers();
 	}
 	
-	/**
-	 * Method to provide a way to update this model when the data changes 
-	 * even though I'm accumulating the model's data through getList()
-	 * 
-	 * @param objList {@link Object} Could be List or Map - if I stabilize it I may specialize the type
-	 */
-	public void setList(final Object objList)
+	public void setManager(final Object objManager)
 	{
-		setChanged();
-		notifyObservers();
-	}
-	
-	public void setListModel(final Object objListModel)
-	{
-		mObjListModel = objListModel;
+		mObjManager = objManager;
 		
 		setChanged();
 		notifyObservers();
 	}
 	
-	public void setManager(final Object objManager)
+	public void setPageable(final Boolean bPageable)
 	{
-		mObjManager = objManager;
+		if(bPageable == null)
+			mbPageable = false;
+		else
+			mbPageable = true;
 		
 		setChanged();
 		notifyObservers();
@@ -492,9 +638,27 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		notifyObservers();
 	}
 	
+	public void setRowKeyType(final Class<?> clsRowKeyType)
+	{
+		mClsRowKeyType = clsRowKeyType;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
 	public void setRowModel(final Object objRowModel)
 	{
-		mObjRowModel = objRowModel;
+		if(objRowModel == null)
+			try
+				{
+				mObjRowModel = getCollection();
+				}
+			catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
+				{
+				objException.printStackTrace(System.err);
+				}
+		else
+			mObjRowModel = objRowModel;
 		
 		setChanged();
 		notifyObservers();

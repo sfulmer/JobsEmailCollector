@@ -2,17 +2,15 @@ package net.draconia.jobsemailcollector.model;
 
 import java.io.File;
 import java.io.Serializable;
-
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import net.draconia.jobsemailcollector.manager.DatabaseManager;
+import net.draconia.jobsemailcollector.manager.IndividualManager;
 import net.draconia.jobsemailcollector.parsers.FileParser;
 
 public class Model extends Observable implements Serializable
@@ -22,10 +20,11 @@ public class Model extends Observable implements Serializable
 	private boolean mbNoUserInterface = false;
 	private DatabaseManager mObjDatabaseManager;
 	private FileParser mObjFileParser;
+	private Integer miPage, miPageSize;
 	private List<File> mLstFilesToImport;
 	private List<Email> mLstEmails;
-	private List<Individual> mLstIndividuals;
-	private Map<Integer, ShallowIndividual> mMapTableData;
+	private List<Individual> mLstIndividuals, mLstTableData;
+	//private Map<Integer, ShallowIndividual> mMapTableData;
 	private String msDatabaseFilename;
 	
 	public Model(final boolean bNoUserInterface)
@@ -113,30 +112,19 @@ public class Model extends Observable implements Serializable
 	{
 		boolean bReturnValue = getIndividualsInternal().add(objIndividual);
 		
-		getTableDataInternal().put(getTableDataInternal().size(), new ShallowIndividual(objIndividual.getId(), objIndividual.getName(), objIndividual.getEmail().getDate()));
+		getTableDataInternal().add(objIndividual);
 		
 		setChanged();
 		notifyObservers();
 		
 		return(bReturnValue);
-	}
-	
-	public synchronized void addIndividual(final int iIndex, final Individual objIndividual)
-	{
-		getIndividualsInternal().add(iIndex, objIndividual);
-		
-		getTableDataInternal().put(getTableDataInternal().size(), new ShallowIndividual(objIndividual.getId(), objIndividual.getName(), objIndividual.getEmail().getDate()));
-		
-		setChanged();
-		notifyObservers();
 	}
 	
 	public synchronized boolean addIndividuals(final Collection<Individual> collIndividuals)
 	{
 		boolean bReturnValue = getIndividualsInternal().addAll(collIndividuals);
 		
-		for(Individual objIndividual : collIndividuals)
-			getTableDataInternal().put(getTableDataInternal().size(), new ShallowIndividual(objIndividual.getId(), objIndividual.getName(), objIndividual.getEmail().getDate()));
+		getTableDataInternal().addAll(collIndividuals);
 		
 		setChanged();
 		notifyObservers();
@@ -144,12 +132,9 @@ public class Model extends Observable implements Serializable
 		return(bReturnValue);
 	}
 	
-	public synchronized boolean addIndividuals(final int iIndex, final Collection<Individual> collIndividuals)
+	public synchronized boolean addTableData(final Individual objIndividual)
 	{
-		boolean bReturnValue = getIndividualsInternal().addAll(iIndex, collIndividuals);
-		
-		for(Individual objIndividual : collIndividuals)
-			getTableDataInternal().put(getTableDataInternal().size(), new ShallowIndividual(objIndividual.getId(), objIndividual.getName(), objIndividual.getEmail().getDate()));
+		Boolean bReturnValue = getTableDataInternal().add(objIndividual);
 		
 		setChanged();
 		notifyObservers();
@@ -157,19 +142,9 @@ public class Model extends Observable implements Serializable
 		return(bReturnValue);
 	}
 	
-	public synchronized ShallowIndividual addTableData(final ShallowIndividual objShallowIndividual)
+	public synchronized void addTableData(final Collection<? extends Individual> collTableData)
 	{
-		ShallowIndividual objReturnValue = getTableDataInternal().put(getTableDataInternal().size(), objShallowIndividual);
-		
-		setChanged();
-		notifyObservers();
-		
-		return(objReturnValue);
-	}
-	
-	public synchronized void addTableData(final Map<? extends Integer, ? extends ShallowIndividual> mapTableData)
-	{
-		getTableDataInternal().putAll(mapTableData);
+		getTableDataInternal().addAll(collTableData);
 		
 		setChanged();
 		notifyObservers();
@@ -265,23 +240,71 @@ public class Model extends Observable implements Serializable
 	protected List<Individual> getIndividualsInternal()
 	{
 		if(mLstIndividuals == null)
-			mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
+			try
+				{
+				mLstIndividuals = new IndividualManager(this).getIndividuals(getPage(), getPageSize());
+				//mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
+				}
+			catch(SQLException objSQLException)
+				{
+				objSQLException.printStackTrace(System.err);
+				
+				mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
+				}
 		
 		return(mLstIndividuals);
 	}
 	
-	public Map<Integer, ShallowIndividual> getTableData()
+	protected int getPage()
 	{
-		return(Collections.unmodifiableMap(getTableDataInternal()));
+		if(miPage == null)
+			miPage = 1;
+		
+		return(miPage);
 	}
 	
-	protected Map<Integer, ShallowIndividual> getTableDataInternal()
+	protected int getPageSize()
+	{
+		if(miPageSize == null)
+			miPageSize = 0;
+		
+		return(miPageSize);
+	}
+	
+	public List<Individual> getTableData()
+	{
+		return(Collections.unmodifiableList(getTableDataInternal()));
+	}
+	
+	protected List<Individual> getTableDataInternal()
+	{
+		if(mLstTableData == null)
+			try
+				{
+				mLstTableData = new IndividualManager(this).getIndividuals(getPage(), getPageSize());
+				}
+			catch(SQLException objSQLException)
+				{
+				objSQLException.printStackTrace(System.err);
+				
+				mLstTableData = Collections.synchronizedList(new ArrayList<Individual>());
+				}
+		
+		return(mLstTableData);
+	}
+	
+	/*public Map<Integer, ShallowIndividual> getTableData()
+	{
+		return(Collections.unmodifiableMap(getTableDataInternal()));
+	}*/
+	
+	/*protected Map<Integer, ShallowIndividual> getTableDataInternal()
 	{
 		if(mMapTableData == null)
 			mMapTableData = new ConcurrentHashMap<Integer, ShallowIndividual>();
 		
 		return(mMapTableData);
-	}
+	}*/
 	
 	public boolean isNoUserInterface()
 	{
@@ -348,14 +371,14 @@ public class Model extends Observable implements Serializable
 		return(bReturnValue);
 	}
 	
-	public synchronized ShallowIndividual removeTableData(final ShallowIndividual objShallowIndividual)
+	public synchronized boolean removeTableData(final Individual objIndividual)
 	{
-		ShallowIndividual objReturnValue = getTableDataInternal().remove(objShallowIndividual.getId());
+		boolean bReturnValue = getTableDataInternal().remove(objIndividual);
 		
 		setChanged();
 		notifyObservers();
 		
-		return(objReturnValue);
+		return(bReturnValue);
 	}
 	
 	public void setDatabaseFilename(final String sDatabaseFilename)
@@ -369,5 +392,24 @@ public class Model extends Observable implements Serializable
 	protected void setNoUserInterface(final boolean bNoUserInterface)
 	{
 		mbNoUserInterface = bNoUserInterface;
+	}
+	
+	protected void setPage(final Integer iPage)
+	{
+		if(iPage == null)
+			miPage = 1;
+		else
+			miPage = iPage;
+		
+		setChanged();
+		notifyObservers();
+	}
+	
+	protected void setPageSize(final Integer iPageSize)
+	{
+		if(iPageSize == null)
+			miPageSize = 0;
+		else
+			miPageSize = iPageSize;
 	}
 }

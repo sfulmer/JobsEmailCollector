@@ -33,6 +33,6 @@ public class IndividualTableModelObserver implements Observer, Serializable
 	{
 		Model objModel = ((Model)(objObservable));
 		
-		getModel().setList(objModel.getTableData());
+		getModel().setCollection(objModel.getTableData());
 	}
 }

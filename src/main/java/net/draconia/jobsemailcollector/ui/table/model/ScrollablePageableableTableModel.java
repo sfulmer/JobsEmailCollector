@@ -49,20 +49,7 @@ public class ScrollablePageableableTableModel implements Serializable, TableMode
 
 	public int getRowCount()
 	{
-		int iPageQuantity;
-		
-		try
-			{
-			iPageQuantity = getModel().getPageQuantity();
-			}
-		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
-			{
-			objException.printStackTrace(System.err);
-			
-			iPageQuantity = 0;
-			}
-		
-		return(iPageQuantity);
+		return(getModel().getPageRowCount(getModel().getCurrentPage()));
 	}
 	
 	protected List<TableModelListener> getTableModelListeners()
@@ -77,7 +64,9 @@ public class ScrollablePageableableTableModel implements Serializable, TableMode
 	{
 		try
 			{
-			return(getModel().getRow(iRowIndex));
+			Object objRow = getModel().getRow(iRowIndex);
+			
+			return(getModel().getColumns().get(iColumnIndex).getValue(objRow));
 			}
 		catch(IllegalAccessException | IllegalArgumentException | InstantiationException | InvocationTargetException | NoSuchMethodException | SecurityException objException)
 			{
