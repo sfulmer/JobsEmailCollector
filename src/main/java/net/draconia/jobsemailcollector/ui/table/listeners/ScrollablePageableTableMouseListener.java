@@ -66,12 +66,12 @@ public class ScrollablePageableTableMouseListener extends MouseAdapter implement
 				Constructor<? extends JDialog> dlgConstructor;
 				JDialog dlg;
 				
-				dlgConstructor = getModel().getDetailDialogClass().getDeclaredConstructor(new Class<?>[] {Window.class, objRow.getClass(), getModel().getManager().getClass()});
+				dlgConstructor = getModel().getDetailDialogClass().getDeclaredConstructor(new Class<?>[] {Window.class, objRow.getClass(), getModel().getService().getClass()});
 				
 				if(!dlgConstructor.isAccessible())
 					dlgConstructor.setAccessible(true);
 				
-				dlg = ((JDialog)(dlgConstructor.newInstance(new Object[] {getParent(), objRow, getModel().getManager()})));
+				dlg = ((JDialog)(dlgConstructor.newInstance(new Object[] {getParent(), objRow, getModel().getService()})));
 				
 				dlg.setVisible(true);
 				}
