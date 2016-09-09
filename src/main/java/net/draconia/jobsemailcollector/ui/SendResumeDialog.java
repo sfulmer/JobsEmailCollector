@@ -32,7 +32,7 @@ import javax.swing.KeyStroke;
 
 import javax.swing.border.TitledBorder;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.actions.Browse;
 import net.draconia.jobsemailcollector.ui.actions.Close;
 import net.draconia.jobsemailcollector.ui.actions.RemoveAttachment;

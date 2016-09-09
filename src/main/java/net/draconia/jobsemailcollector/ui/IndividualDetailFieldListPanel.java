@@ -24,8 +24,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
-import net.draconia.jobsemailcollector.model.Individual;
-
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.actions.IndividualDetailFieldListAdd;
 import net.draconia.jobsemailcollector.ui.actions.IndividualDetailFieldListEdit;
 import net.draconia.jobsemailcollector.ui.actions.IndividualDetailFieldListRemove;

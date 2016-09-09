@@ -16,8 +16,7 @@ import javax.swing.JTextField;
 
 import javax.swing.text.JTextComponent;
 
-import net.draconia.jobsemailcollector.model.Individual;
-
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.listeners.IndividualNameChangeListener;
 
 import net.draconia.jobsemailcollector.ui.utilities.TextUtilities;

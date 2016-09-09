@@ -13,6 +13,7 @@ import java.io.File;
 
 import java.util.Date;
 
+import javax.annotation.PostConstruct;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -22,14 +23,13 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import net.draconia.jobsemailcollector.manager.IndividualManager;
+import net.draconia.jobsemailcollector.domain.Individual;
 
-import net.draconia.jobsemailcollector.model.Individual;
 import net.draconia.jobsemailcollector.model.Model;
 
 import net.draconia.jobsemailcollector.observers.FileListImportJobsObserver;
 import net.draconia.jobsemailcollector.observers.FileListObserver;
-
+import net.draconia.jobsemailcollector.service.IndividualService;
 import net.draconia.jobsemailcollector.ui.actions.BrowseFiles;
 import net.draconia.jobsemailcollector.ui.actions.ImportJobs;
 import net.draconia.jobsemailcollector.ui.actions.Quit;
@@ -37,17 +37,39 @@ import net.draconia.jobsemailcollector.ui.actions.Quit;
 import net.draconia.jobsemailcollector.ui.model.FileListModel;
 
 import net.draconia.jobsemailcollector.ui.observers.IndividualTableModelObserver;
+
 import net.draconia.jobsemailcollector.ui.table.ScrollablePageableTable;
+
 import net.draconia.jobsemailcollector.ui.table.model.Column;
 import net.draconia.jobsemailcollector.ui.table.model.ScrollablePageableModel;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
 public class JobsEmailCollectorMainFrame extends JFrame
 {
 	private static final long serialVersionUID = 5691706816030821149L;
 	
 	private Action mActBrowseFiles, mActImportJobs, mActQuit;
+	
+	@Autowired
+	@Qualifier("individualService")
+	private IndividualService mObjIndividualService;
+	
 	private JList<File> mLstFiles;
+	
+	@Autowired
+	@Qualifier("mainModel")
 	private Model mObjModel;
+	
+	public JobsEmailCollectorMainFrame()
+	{
+		super("Jobs Email Collector");
+		
+		//initFrame();
+	}
 	
 	public JobsEmailCollectorMainFrame(final Model objModel)
 	{
@@ -55,7 +77,7 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		
 		setModel(objModel);
 		
-		initFrame();
+		//initFrame();
 	}
 	
 	protected Action getBrowseFilesAction()
@@ -156,9 +178,13 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		return(pnlImport);
 	}
 	
+	protected IndividualService getIndividualService()
+	{
+		return(mObjIndividualService);
+	}
+	
 	protected JPanel getIndividualsPanel()
 	{
-		IndividualManager objIndividualManager = new IndividualManager(getModel());
 		JPanel pnlIndividuals;
 		
 		//new Thread(new IndividualsTableLoader(getModel())).start();
@@ -172,7 +198,7 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		ScrollablePageableModel objModel = ((ScrollablePageableTable)(pnlIndividuals)).getModel();
 		
 		objModel.setCollectionModel(getModel());
-		objModel.setManager(objIndividualManager);
+		objModel.setService(getIndividualService());
 		objModel.setDetailDialogClass(IndividualDetailDialog.class);
 		objModel.setGetCollectionSizeName("getIndividualCount");
 		objModel.setGetDataCollectionName("getIndividuals");
@@ -227,6 +253,7 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		add(getIndividualsPanel(), BorderLayout.CENTER);
 	}
 	
+	@PostConstruct
 	protected void initFrame()
 	{
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -235,6 +262,11 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		initControl();
 		
 		pack();
+	}
+	
+	protected void setIndividualService(final IndividualService objIndividualService)
+	{
+		mObjIndividualService = objIndividualService;
 	}
 	
 	protected void setModel(final Model objModel)

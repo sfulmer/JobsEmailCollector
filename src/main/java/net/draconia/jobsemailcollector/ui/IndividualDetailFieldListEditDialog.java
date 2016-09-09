@@ -21,7 +21,7 @@ import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.actions.Close;
 import net.draconia.jobsemailcollector.ui.actions.SaveIndividualDetailFieldListAdd;
 import net.draconia.jobsemailcollector.ui.listeners.IndividualDetailFieldListAddChangeListener;

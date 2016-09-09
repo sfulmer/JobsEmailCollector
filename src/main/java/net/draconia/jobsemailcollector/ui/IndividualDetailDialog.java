@@ -19,9 +19,7 @@ import javax.swing.JRootPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 
-import net.draconia.jobsemailcollector.manager.IndividualManager;
-
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 import net.draconia.jobsemailcollector.ui.actions.ApplyIndividualDetails;
 import net.draconia.jobsemailcollector.ui.actions.Close;
@@ -38,22 +36,12 @@ public class IndividualDetailDialog extends JDialog
 	private Action mActApply, mActClose, mActSave, mActSendResume;
 	private Component mCmpEmail, mCmpIndividual;
 	private Individual mObjModel, mObjWorkingModel;
-	private IndividualManager mObjIndividualManager;
 	private JTabbedPane mPnlTabs;
 	private Observer mObjSaveApplyObserver;
 	
 	public IndividualDetailDialog(final Window wndParent)
 	{
 		super(wndParent, "Edit Individual...");
-		
-		initDialog();
-	}
-	
-	public IndividualDetailDialog(final Window wndParent, final IndividualManager objIndividualManager)
-	{
-		super(wndParent, "Edit Individual...");
-		
-		setIndividualManager(objIndividualManager);
 		
 		initDialog();
 	}
@@ -67,21 +55,11 @@ public class IndividualDetailDialog extends JDialog
 		initDialog();
 	}
 	
-	public IndividualDetailDialog(final Window wndParent, final Individual objModel, final IndividualManager objIndividualManager)
-	{
-		super(wndParent, "Edit Individual...");
-		
-		setIndividualManager(objIndividualManager);
-		setModel(objModel);
-		
-		initDialog();
-	}
-	
 	private Action getApplyAction()
 	{
 		if(mActApply == null)
 			{
-			mActApply = new ApplyIndividualDetails(getWorkingModel(), getModel(), getIndividualManager());
+			mActApply = new ApplyIndividualDetails(getWorkingModel(), getModel());
 			
 			mActApply.setEnabled(!getWorkingModel().equals(getModel()));
 			}
@@ -140,14 +118,9 @@ public class IndividualDetailDialog extends JDialog
 	private Component getEmailTabPane()
 	{
 		if(mCmpEmail == null)
-			mCmpEmail = new EmailTabPanel(getWorkingModel().getEmail());
+			mCmpEmail = new EmailTabPanel(getWorkingModel().getEmails().get(0));
 		
 		return(mCmpEmail);
-	}
-	
-	private IndividualManager getIndividualManager()
-	{
-		return(mObjIndividualManager);
 	}
 	
 	private Component getIndividualTabPane()
@@ -261,11 +234,6 @@ public class IndividualDetailDialog extends JDialog
 		
 		pack();
 		setLocation((int)((szScreen.getWidth() - getWidth()) / 2), (int)((szScreen.getHeight() - getHeight()) / 2));
-	}
-	
-	protected void setIndividualManager(final IndividualManager objIndividualManager)
-	{
-		mObjIndividualManager = objIndividualManager;
 	}
 	
 	protected void setModel(final Individual objModel)

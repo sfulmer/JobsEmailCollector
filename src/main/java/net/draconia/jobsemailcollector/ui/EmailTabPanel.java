@@ -18,7 +18,7 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 
-import net.draconia.jobsemailcollector.model.Email;
+import net.draconia.jobsemailcollector.domain.Email;
 import net.draconia.jobsemailcollector.ui.listeners.EmailDateChangeListener;
 import net.draconia.jobsemailcollector.ui.listeners.EmailFieldChangeListener;
 
