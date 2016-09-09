@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JList;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public class IndividualDetailFieldListRemove extends IndividualDetailFieldListCommand
 {

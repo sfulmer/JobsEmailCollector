@@ -2,24 +2,30 @@ package net.draconia.jobsemailcollector.ui.actions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+
 import java.io.IOException;
-import java.sql.SQLException;
 
 import javax.imageio.ImageIO;
+
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 
-import net.draconia.jobsemailcollector.manager.IndividualManager;
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
+
+import net.draconia.jobsemailcollector.service.IndividualService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ApplyIndividualDetails extends AbstractAction
 {
 	private static final long serialVersionUID = 8546204449320269130L;
 	
 	private Individual mObjDirty, mObjClean;
-	private IndividualManager mObjIndividualManager;
 	
-	public ApplyIndividualDetails(final Individual objDirty, final Individual objClean, final IndividualManager objIndividualManager)
+	@Autowired
+	private IndividualService mObjIndividualService;
+	
+	public ApplyIndividualDetails(final Individual objDirty, final Individual objClean)
 	{
 		super("Apply");
 		
@@ -34,28 +40,15 @@ public class ApplyIndividualDetails extends AbstractAction
 			objIOException.printStackTrace(System.err);
 			}
 		
-		setIndividualManager(objIndividualManager);
 		setDirty(objDirty);
 		setClean(objClean);
 	}
 	
 	public void actionPerformed(final ActionEvent objActionEvent)
 	{
-		try
-			{
-			getIndividualManager().updateIndividual(getDirty());
-			
-			getClean().set(getDirty());
-			}
-		catch(SQLException objException)
-			{
-			objException.printStackTrace(System.err);
-			}
-	}
-	
-	protected IndividualManager getIndividualManager()
-	{
-		return(mObjIndividualManager);
+		getIndividualService().save(getDirty());
+		
+		getClean().set(getDirty());
 	}
 	
 	protected Individual getClean()
@@ -68,9 +61,9 @@ public class ApplyIndividualDetails extends AbstractAction
 		return(mObjDirty);
 	}
 	
-	protected void setIndividualManager(final IndividualManager objIndividualManager)
+	protected IndividualService getIndividualService()
 	{
-		mObjIndividualManager = objIndividualManager;
+		return(mObjIndividualService);
 	}
 	
 	protected void setClean(final Individual objClean)
@@ -81,5 +74,10 @@ public class ApplyIndividualDetails extends AbstractAction
 	protected void setDirty(final Individual objDirty)
 	{
 		mObjDirty = objDirty;
+	}
+	
+	protected void setIndividualService(final IndividualService objIndividualService)
+	{
+		mObjIndividualService = objIndividualService;
 	}
 }

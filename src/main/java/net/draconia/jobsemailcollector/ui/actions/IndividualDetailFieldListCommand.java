@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 
 import javax.swing.AbstractAction;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public abstract class IndividualDetailFieldListCommand extends AbstractAction
 {

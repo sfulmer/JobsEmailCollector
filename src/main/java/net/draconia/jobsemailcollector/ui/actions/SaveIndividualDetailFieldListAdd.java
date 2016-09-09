@@ -11,7 +11,7 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.model.IndividualDetailFieldListAddDialogModel;
 
 public class SaveIndividualDetailFieldListAdd extends AbstractAction
