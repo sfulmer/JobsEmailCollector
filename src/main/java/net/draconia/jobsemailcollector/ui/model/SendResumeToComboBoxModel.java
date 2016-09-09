@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.ComboBoxModel;
 import javax.swing.event.ListDataListener;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public class SendResumeToComboBoxModel implements ComboBoxModel<String>, Serializable
 {
@@ -29,7 +29,7 @@ public class SendResumeToComboBoxModel implements ComboBoxModel<String>, Seriali
 	
 	public String getElementAt(final int iIndex)
 	{
-		return(getModel().getEmailAddressList().get(iIndex));
+		return(getModel().getEmailAddressList().get(iIndex).getEmailAddress());
 	}
 	
 	protected List<ListDataListener> getListDataListeners()

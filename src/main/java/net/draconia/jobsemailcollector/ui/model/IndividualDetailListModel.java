@@ -10,7 +10,7 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.ui.observers.IndividualDetailListModelObserver;
 
 public class IndividualDetailListModel implements ListModel<String>, Serializable

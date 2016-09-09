@@ -9,10 +9,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 
-import net.draconia.jobsemailcollector.model.Individual;
-
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public class SendResumeDialogModel extends Observable implements Serializable
 {
@@ -76,7 +76,7 @@ public class SendResumeDialogModel extends Observable implements Serializable
 	protected String getDefaultTo()
 	{
 		if(getModel().getEmailAddressList().size() > 0)
-			return(getModel().getEmailAddressList().get(0));
+			return(getModel().getEmailAddressList().get(0).getEmailAddress());
 		else
 			return("");
 	}
