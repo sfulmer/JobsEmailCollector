@@ -27,7 +27,7 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	private List<Column> mLstColumns;
 	private List<Integer> mLstPageSizes;
 	private Object mObjCollection, mObjCollectionModel, mObjCollectionSizeModel;
-	private Object mObjManager, mObjRowModel;
+	private Object mObjService, mObjRowModel;
 	private String msGetCollectionSizeName, msGetDataCollectionName, msGetRowByIndexName;
 	
 	public ScrollablePageableModel()
@@ -174,7 +174,7 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	public Object getCollectionSizeModel()
 	{
 		if(mObjCollectionSizeModel == null)
-			mObjCollectionSizeModel = getManager();
+			mObjCollectionSizeModel = getService();
 		
 		return(mObjCollectionSizeModel);
 	}
@@ -257,9 +257,9 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		return(mClsIdType);
 	}
 	
-	public Object getManager()
+	public Object getService()
 	{
-		return(mObjManager);
+		return(mObjService);
 	}
 	
 	public Integer getPageQuantity() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
@@ -519,7 +519,7 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	public void setCollectionSizeModel(final Object objCollectionSizeModel)
 	{
 		if(objCollectionSizeModel == null)
-			mObjCollectionSizeModel = getManager();
+			mObjCollectionSizeModel = getService();
 		else
 			mObjCollectionSizeModel = objCollectionSizeModel;
 		
@@ -600,9 +600,9 @@ public class ScrollablePageableModel extends Observable implements Serializable
 		notifyObservers();
 	}
 	
-	public void setManager(final Object objManager)
+	public void setService(final Object objService)
 	{
-		mObjManager = objManager;
+		mObjService = objService;
 		
 		setChanged();
 		notifyObservers();
