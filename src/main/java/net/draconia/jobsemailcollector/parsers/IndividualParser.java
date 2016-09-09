@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import net.draconia.jobsemailcollector.model.Email;
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Email;
+import net.draconia.jobsemailcollector.domain.Individual;
 import net.draconia.jobsemailcollector.model.Model;
 
 public class IndividualParser implements Parser
@@ -150,9 +150,9 @@ public class IndividualParser implements Parser
 			if(!isEmailToBeAvoided(filterOutEmailAddress(objEmail.getFrom())))
 				{
 				getIndividual().setName(getName(Arrays.asList(new String[] {objEmail.getFrom(), objEmail.getTo()})));
-				getIndividual().addEmailAddresses(getEmailAddresses(objEmail));
-				getIndividual().addPhoneNumbers(getPhoneNumbers(objEmail));
-				getIndividual().setEmail(objEmail);
+//				getIndividual().addEmailAddresses(getEmailAddresses(objEmail));
+//				getIndividual().addPhoneNumbers(getPhoneNumbers(objEmail));
+				//getIndividual().addEmail(objEmail);  //TODO: Must fix!
 				
 				lstIndividuals.add(getIndividual());
 				}

@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import net.draconia.jobsemailcollector.model.Email;
+import net.draconia.jobsemailcollector.domain.Email;
 import net.draconia.jobsemailcollector.model.Model;
 
 public class TextParser implements Parser

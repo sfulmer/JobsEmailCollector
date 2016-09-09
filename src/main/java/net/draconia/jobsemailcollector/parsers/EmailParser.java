@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.draconia.jobsemailcollector.model.MimePart;
-import net.draconia.jobsemailcollector.model.Email;
+import net.draconia.jobsemailcollector.domain.Email;
 import net.draconia.jobsemailcollector.model.Header;
 
 import org.apache.commons.lang3.StringEscapeUtils;
