@@ -6,7 +6,7 @@ import java.util.Observer;
 
 import javax.swing.Action;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public class IndividualDetailDialogApplySaveObserver implements Observer, Serializable
 {
