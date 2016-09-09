@@ -9,7 +9,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 
-import net.draconia.jobsemailcollector.model.Email;
+import net.draconia.jobsemailcollector.domain.Email;
 import net.sourceforge.jdatepicker.DateModel;
 
 public class EmailFieldChangeListener implements ChangeListener, Serializable

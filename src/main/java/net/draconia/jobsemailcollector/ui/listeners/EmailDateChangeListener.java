@@ -7,8 +7,7 @@ import java.util.Date;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import net.draconia.jobsemailcollector.model.Email;
-
+import net.draconia.jobsemailcollector.domain.Email;
 import net.sourceforge.jdatepicker.DateModel;
 
 public class EmailDateChangeListener implements ChangeListener, Serializable

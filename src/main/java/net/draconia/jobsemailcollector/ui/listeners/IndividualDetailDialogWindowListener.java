@@ -5,7 +5,7 @@ import java.awt.event.WindowEvent;
 import java.io.Serializable;
 import java.util.Observer;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
 
 public class IndividualDetailDialogWindowListener extends WindowAdapter implements Serializable
 {

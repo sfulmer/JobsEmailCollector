@@ -8,13 +8,13 @@ import java.awt.event.MouseEvent;
 
 import java.io.Serializable;
 
-import java.sql.SQLException;
-
 import javax.swing.JTable;
 
-import net.draconia.jobsemailcollector.manager.IndividualManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import net.draconia.jobsemailcollector.model.Individual;
+import net.draconia.jobsemailcollector.domain.Individual;
+
+import net.draconia.jobsemailcollector.service.IndividualService;
 
 import net.draconia.jobsemailcollector.ui.IndividualDetailDialog;
 
@@ -22,18 +22,19 @@ public class IndividualTableMouseListener extends MouseAdapter implements Serial
 {	
 	private static final long serialVersionUID = -8151415983767938609L;
 	
-	private IndividualManager mObjIndividualManager;
+	@Autowired
+	private IndividualService mObjIndividualService;
+	
 	private Window mWndParent;
 	
-	public IndividualTableMouseListener(final Window wndParent, final IndividualManager objIndividualManager)
+	public IndividualTableMouseListener(final Window wndParent)
 	{
 		setParent(wndParent);
-		setIndividualManager(objIndividualManager);
 	}
 	
-	protected IndividualManager getIndividualManager()
+	protected IndividualService getIndividualService()
 	{
-		return(mObjIndividualManager);
+		return(mObjIndividualService);
 	}
 	
 	protected Window getParent()
@@ -51,28 +52,23 @@ public class IndividualTableMouseListener extends MouseAdapter implements Serial
 		iRow = tbl.rowAtPoint(pt);
 		
 		if((iRow >= 0) && (objMouseEvent.getClickCount() == 2))
-			try
-				{
-				int iId = ((int)(tbl.getValueAt(iRow, 0)));
+			{
+			int iId = ((int)(tbl.getValueAt(iRow, 0)));
 				
-				objIndividual = getIndividualManager().getIndividualById(iId);
-				}
-			catch(SQLException objException)
-				{
-				objIndividual = null;
-				}
+			objIndividual = getIndividualService().getIndividualById(iId);
+			}
 		
 		if(objIndividual != null)
 			{
-			IndividualDetailDialog dlgIndividualDetail = new IndividualDetailDialog(getParent(), objIndividual, getIndividualManager());
+			IndividualDetailDialog dlgIndividualDetail = new IndividualDetailDialog(getParent(), objIndividual);
 			
 			dlgIndividualDetail.setVisible(true);
 			}
 	}
 	
-	protected void setIndividualManager(final IndividualManager objIndividualManager)
+	protected void setIndividualService(final IndividualService objIndividualService)
 	{
-		mObjIndividualManager = objIndividualManager;
+		mObjIndividualService = objIndividualService;
 	}
 	
 	protected void setParent(final Window wndParent)
