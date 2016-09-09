@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans	xmlns="http://www.springframework.org/schema/beans"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+							http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+							http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+	
+	<context:component-scan base-package="net.draconia.jobsemailcollector" />
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="org.sqlite.JDBC" />
+		<property name="url" value="jdbc:sqlite:TestDB" />
+	</bean>
+	
+	<bean id="hibernate5SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="net.draconia.jobsemailcollector.domain" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">net.draconia.jobsemailcollector.hibernate.dialect.Sqlite</prop>
+				<prop key="hibernate.hbm2ddl.auto">create</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="individualDAO" class="net.draconia.jobsemailcollector.dao.IndividualDAOImpl" />
+	<bean id="individualService" class="net.draconia.jobsemailcollector.service.IndividualServiceImpl" />
+	
+	<bean id="mainModel" class="net.draconia.jobsemailcollector.model.Model" />
+</beans>

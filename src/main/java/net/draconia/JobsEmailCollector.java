@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -19,21 +20,38 @@ import net.draconia.jobsemailcollector.model.Model;
 import net.draconia.jobsemailcollector.observers.EmailObserver;
 
 import net.draconia.jobsemailcollector.parsers.FileParser;
-
 import net.draconia.jobsemailcollector.ui.JobsEmailCollectorMainFrame;
+import net.draconia.listeners.SpringContextShutdownHook;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.springframework.context.ApplicationContext;
+
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
 public class JobsEmailCollector implements Runnable
 {
-	private Boolean mbNoUserInterface;
+	private ApplicationContext mObjApplicationContext;
 	private Model mObjModel;
 	private Properties mObjArguments;
 	
 	public JobsEmailCollector(final Boolean bNoUserInterface, final Properties objArguments)
 	{
-		setNoUserInterface(bNoUserInterface);
+		getModel().setNoUserInterface(bNoUserInterface);
+		
 		setArguments(objArguments);
+	}
+	
+	protected ApplicationContext getApplicationContext()
+	{
+		if(mObjApplicationContext == null)
+			{
+			mObjApplicationContext = new ClassPathXmlApplicationContext("Beans.xml");
+			
+			Runtime.getRuntime().addShutdownHook(new Thread(new SpringContextShutdownHook(mObjApplicationContext)));
+			}
+		
+		return(mObjApplicationContext);
 	}
 	
 	public Properties getArguments()
@@ -58,22 +76,12 @@ public class JobsEmailCollector implements Runnable
 	{
 		if(mObjModel == null)
 			{
-			mObjModel = new Model(isNoUserInterface());
-			
-			mObjModel.setDatabaseFilename(getDatabaseFilename());
+			mObjModel = getApplicationContext().getBean(Model.class);
 			
 			mObjModel.addObserver(new EmailObserver());
 			}
 		
 		return(mObjModel);
-	}
-	
-	protected boolean isNoUserInterface()
-	{
-		if(mbNoUserInterface == null)
-			mbNoUserInterface = false;
-		
-		return(mbNoUserInterface);
 	}
 	
 	protected static Properties parseCommandLineArguments(final String[] sArrArgs)
@@ -103,15 +111,14 @@ public class JobsEmailCollector implements Runnable
 	
 	public void run()
 	{
-		new Thread(new Librarian(getModel())).start();
-		
 		try
 			{
-			if(!isNoUserInterface())
+			if(!getModel().isNoUserInterface())
 				{
+				JFrame frmMain = ((JFrame)(getApplicationContext().getBean(JobsEmailCollectorMainFrame.class)));
 				UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-					
-				new JobsEmailCollectorMainFrame(getModel()).setVisible(true);
+				
+				frmMain.setVisible(true);
 				}
 			else
 				{
@@ -140,14 +147,6 @@ public class JobsEmailCollector implements Runnable
 			mObjArguments = new Properties();
 		else
 			mObjArguments = objArgs;
-	}
-	
-	protected void setNoUserInterface(final Boolean bNoUserInterface)
-	{
-		if(bNoUserInterface == null)
-			mbNoUserInterface = false;
-		else
-			mbNoUserInterface = bNoUserInterface;
 	}
 	
 	public static void main(final String[] args)

@@ -2,30 +2,34 @@ package net.draconia.jobsemailcollector.model;
 
 import java.io.File;
 import java.io.Serializable;
-import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 
-import net.draconia.jobsemailcollector.manager.DatabaseManager;
-import net.draconia.jobsemailcollector.manager.IndividualManager;
+import org.springframework.stereotype.Component;
+
+import net.draconia.jobsemailcollector.domain.Email;
+import net.draconia.jobsemailcollector.domain.Individual;
+
 import net.draconia.jobsemailcollector.parsers.FileParser;
 
+@Component("mainModel")
 public class Model extends Observable implements Serializable
 {
 	private static final long serialVersionUID = 6631904656143398651L;
 	
 	private boolean mbNoUserInterface = false;
-	private DatabaseManager mObjDatabaseManager;
 	private FileParser mObjFileParser;
 	private Integer miPage, miPageSize;
 	private List<File> mLstFilesToImport;
 	private List<Email> mLstEmails;
 	private List<Individual> mLstIndividuals, mLstTableData;
-	//private Map<Integer, ShallowIndividual> mMapTableData;
-	private String msDatabaseFilename;
+	
+	public Model()
+	{ }
 	
 	public Model(final boolean bNoUserInterface)
 	{
@@ -182,22 +186,6 @@ public class Model extends Observable implements Serializable
 		notifyObservers();
 	}
 	
-	public String getDatabaseFilename()
-	{
-		if(msDatabaseFilename == null)
-			msDatabaseFilename = "";
-		
-		return(msDatabaseFilename);
-	}
-	
-	public DatabaseManager getDatabaseManager()
-	{
-		if(mObjDatabaseManager == null)
-			mObjDatabaseManager = new DatabaseManager(getDatabaseFilename());
-		
-		return(mObjDatabaseManager);
-	}
-	
 	public  List<Email> getEmails()
 	{
 		return(Collections.unmodifiableList(getEmailsInternal()));
@@ -240,22 +228,12 @@ public class Model extends Observable implements Serializable
 	protected List<Individual> getIndividualsInternal()
 	{
 		if(mLstIndividuals == null)
-			try
-				{
-				mLstIndividuals = new IndividualManager(this).getIndividuals(getPage(), getPageSize());
-				//mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
-				}
-			catch(SQLException objSQLException)
-				{
-				objSQLException.printStackTrace(System.err);
-				
-				mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
-				}
+			mLstIndividuals = Collections.synchronizedList(new ArrayList<Individual>());
 		
 		return(mLstIndividuals);
 	}
 	
-	protected int getPage()
+	public int getPage()
 	{
 		if(miPage == null)
 			miPage = 1;
@@ -263,7 +241,7 @@ public class Model extends Observable implements Serializable
 		return(miPage);
 	}
 	
-	protected int getPageSize()
+	public int getPageSize()
 	{
 		if(miPageSize == null)
 			miPageSize = 0;
@@ -279,32 +257,10 @@ public class Model extends Observable implements Serializable
 	protected List<Individual> getTableDataInternal()
 	{
 		if(mLstTableData == null)
-			try
-				{
-				mLstTableData = new IndividualManager(this).getIndividuals(getPage(), getPageSize());
-				}
-			catch(SQLException objSQLException)
-				{
-				objSQLException.printStackTrace(System.err);
-				
-				mLstTableData = Collections.synchronizedList(new ArrayList<Individual>());
-				}
+			mLstTableData = Collections.synchronizedList(new ArrayList<Individual>());
 		
 		return(mLstTableData);
 	}
-	
-	/*public Map<Integer, ShallowIndividual> getTableData()
-	{
-		return(Collections.unmodifiableMap(getTableDataInternal()));
-	}*/
-	
-	/*protected Map<Integer, ShallowIndividual> getTableDataInternal()
-	{
-		if(mMapTableData == null)
-			mMapTableData = new ConcurrentHashMap<Integer, ShallowIndividual>();
-		
-		return(mMapTableData);
-	}*/
 	
 	public boolean isNoUserInterface()
 	{
@@ -381,20 +337,12 @@ public class Model extends Observable implements Serializable
 		return(bReturnValue);
 	}
 	
-	public void setDatabaseFilename(final String sDatabaseFilename)
-	{
-		if(sDatabaseFilename == null)
-			msDatabaseFilename = "";
-		else
-			msDatabaseFilename = sDatabaseFilename;
-	}
-	
-	protected void setNoUserInterface(final boolean bNoUserInterface)
+	public void setNoUserInterface(final boolean bNoUserInterface)
 	{
 		mbNoUserInterface = bNoUserInterface;
 	}
 	
-	protected void setPage(final Integer iPage)
+	public void setPage(final Integer iPage)
 	{
 		if(iPage == null)
 			miPage = 1;
@@ -405,7 +353,7 @@ public class Model extends Observable implements Serializable
 		notifyObservers();
 	}
 	
-	protected void setPageSize(final Integer iPageSize)
+	public void setPageSize(final Integer iPageSize)
 	{
 		if(iPageSize == null)
 			miPageSize = 0;

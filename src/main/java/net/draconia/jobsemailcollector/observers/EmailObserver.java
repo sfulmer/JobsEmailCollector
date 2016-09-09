@@ -1,11 +1,12 @@
 package net.draconia.jobsemailcollector.observers;
 
 import java.io.Serializable;
+
 import java.util.Observable;
 import java.util.Observer;
 
-import net.draconia.jobsemailcollector.manager.DatabaseManager;
 import net.draconia.jobsemailcollector.model.Model;
+
 import net.draconia.jobsemailcollector.parsers.IndividualParser;
 
 public class EmailObserver implements Observer, Serializable
@@ -13,11 +14,6 @@ public class EmailObserver implements Observer, Serializable
 	private static final long serialVersionUID = -4456932933426293416L;
 	
 	private IndividualParser mObjIndividualParser;
-	
-	protected DatabaseManager getDatabaseManager()
-	{
-		return(getIndividualParser().getModel().getDatabaseManager());
-	}
 	
 	public IndividualParser getIndividualParser()
 	{
