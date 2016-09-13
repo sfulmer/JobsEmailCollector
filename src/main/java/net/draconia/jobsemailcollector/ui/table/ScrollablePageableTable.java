@@ -27,6 +27,7 @@ public class ScrollablePageableTable extends InitializablePanel
 	private static final long serialVersionUID = 2423017759548313902L;
 	
 	private JTable mTblTable;
+	private PagingPanel mObjPagingPanel;
 	private ScrollablePageableModel mObjModel;
 	private TableModel mObjTableModel;
 	
@@ -58,7 +59,10 @@ public class ScrollablePageableTable extends InitializablePanel
 	
 	protected JPanel getPagingPanel()
 	{
-		return(new PagingPanel(getModel()));
+		if(mObjPagingPanel == null)
+			mObjPagingPanel = new PagingPanel(getModel());
+		
+		return(mObjPagingPanel);
 	}
 		
 	protected JScrollPane getScrollPanel()

@@ -26,6 +26,7 @@ public class EmailAddress extends Observable implements Cloneable, Serializable
 	@Column(columnDefinition="text", insertable=true, name="EmailAddress", nullable=false, updatable=true)
 	private String msEmailAddress;
 	
+	@Column(name="Individual")
 	@JoinColumn(name="Individual")
 	private Individual mObjIndividual;
 	

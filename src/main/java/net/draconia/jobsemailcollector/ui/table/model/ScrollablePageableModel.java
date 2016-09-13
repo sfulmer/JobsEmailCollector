@@ -349,7 +349,7 @@ public class ScrollablePageableModel extends Observable implements Serializable
 	
 	public Object getRow(final Integer iRowIndex) throws IllegalAccessException, IllegalArgumentException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException
 	{
-		Method funcGet = getRowModel().getClass().getDeclaredMethod(getGetRowByIndexName(), new Class<?>[] {getRowKeyType()});
+		Method funcGet = getRowModel().getClass().getMethod(getGetRowByIndexName(), new Class<?>[] {getRowKeyType()});
 		
 		if(!funcGet.isAccessible())
 			funcGet.setAccessible(true);

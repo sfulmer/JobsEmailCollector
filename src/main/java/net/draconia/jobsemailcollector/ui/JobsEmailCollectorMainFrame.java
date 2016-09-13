@@ -206,7 +206,7 @@ public class JobsEmailCollectorMainFrame extends JFrame
 		objModel.setIdType(Integer.class);
 		objModel.setPageable(true);
 		objModel.setRowDataType(Individual.class);
-		objModel.setRowKeyType(Object.class);
+		objModel.setRowKeyType(int.class);
 		
 		getModel().addObserver(new IndividualTableModelObserver(objModel));
 		

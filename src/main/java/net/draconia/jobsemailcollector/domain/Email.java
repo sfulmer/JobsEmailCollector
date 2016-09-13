@@ -25,6 +25,7 @@ public class Email extends Observable implements Cloneable, Serializable
 	@Column(columnDefinition="integer", insertable=true, name="DateReceived", nullable=false, updatable=true)
 	private Date mDtDate;
 	
+	@Column(name="Individual")
 	@JoinColumn(name="Individual")
 	private Individual mObjIndividual;
 	
@@ -45,13 +46,13 @@ public class Email extends Observable implements Cloneable, Serializable
 	@Column(columnDefinition="text", insertable=true, name="ContentType", nullable=false, updatable=true)
 	private String msContentType;
 	
-	@Column(columnDefinition="text", insertable=true, name="From", nullable=false, updatable=true)
+	@Column(columnDefinition="text", insertable=true, name="EmailFrom", nullable=false, updatable=true)
 	private String msFrom;
 	
 	@Column(columnDefinition="text", insertable=true, name="Subject", nullable=false, updatable=true)
 	private String msSubject;
 	
-	@Column(columnDefinition="text", insertable=true, name="To", nullable=false, updatable=true)
+	@Column(columnDefinition="text", insertable=true, name="EmailTo", nullable=false, updatable=true)
 	private String msTo;
 	
 	public Email()

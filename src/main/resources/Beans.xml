@@ -11,7 +11,7 @@
 	
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="org.sqlite.JDBC" />
-		<property name="url" value="jdbc:sqlite:TestDB" />
+		<property name="url" value="jdbc:sqlite:Jobs.db" />
 	</bean>
 	
 	<bean id="hibernate5SessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
@@ -19,15 +19,10 @@
 		<property name="packagesToScan" value="net.draconia.jobsemailcollector.domain" />
 		<property name="hibernateProperties">
 			<props>
-				<prop key="hibernate.dialect">net.draconia.jobsemailcollector.hibernate.dialect.Sqlite</prop>
-				<prop key="hibernate.hbm2ddl.auto">create</prop>
+				<prop key="hibernate.dialect">com.enigmabridge.hibernate.dialect.SQLiteDialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
 				<prop key="hibernate.show_sql">true</prop>
 			</props>
 		</property>
 	</bean>
-	
-	<bean id="individualDAO" class="net.draconia.jobsemailcollector.dao.IndividualDAOImpl" />
-	<bean id="individualService" class="net.draconia.jobsemailcollector.service.IndividualServiceImpl" />
-	
-	<bean id="mainModel" class="net.draconia.jobsemailcollector.model.Model" />
 </beans>

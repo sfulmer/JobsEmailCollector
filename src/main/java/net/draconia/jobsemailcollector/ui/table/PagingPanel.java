@@ -30,7 +30,7 @@ public class PagingPanel extends InitializablePanel
 	
 	private Action mActFirstPage, mActLastPage, mActNextPage, mActPreviousPage;
 	private JComboBox<Integer> mCboPageSize;
-	private JLabel mLblPageSize;
+	private JLabel mLblPage, mLblPageSize;
 	private JSpinner mSpnCurrentPage;
 	private JTextField mTxtTotalPages;
 	private ScrollablePageableModel mObjModel;
@@ -180,13 +180,16 @@ public class PagingPanel extends InitializablePanel
 	
 	protected JLabel getPageLabel()
 	{
-		JLabel lblPage = new JLabel("Page:");
+		if(mLblPage == null)
+			{
+			mLblPage = new JLabel("Page:");
+			
+			mLblPage.setFont(getFont().deriveFont(Font.BOLD));
+			mLblPage.setLabelFor(getCurrentPageField());
+			mLblPage.setOpaque(false);
+			}
 		
-		lblPage.setFont(getFont().deriveFont(Font.BOLD));
-		lblPage.setLabelFor(getCurrentPageField());
-		lblPage.setOpaque(false);
-		
-		return(lblPage);
+		return(mLblPage);
 	}
 	
 	protected JComboBox<Integer> getPageSizeField()

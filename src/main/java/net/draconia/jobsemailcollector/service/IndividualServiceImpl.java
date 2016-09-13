@@ -41,7 +41,7 @@ public class IndividualServiceImpl implements IndividualService
 		return(getIndividualDAO().getIndividualByName(sName));
 	}
 	
-	public Integer getIndividualCount()
+	public Long getIndividualCount()
 	{
 		return(getIndividualDAO().getIndividualCount());
 	}

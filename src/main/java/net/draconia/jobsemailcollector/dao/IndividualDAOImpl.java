@@ -6,7 +6,7 @@ import net.draconia.jobsemailcollector.domain.Individual;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-
+import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Component;
@@ -44,9 +44,14 @@ public class IndividualDAOImpl implements IndividualDAO
 		return(null);
 	}
 
-	public Integer getIndividualCount()
+	public Long getIndividualCount()
 	{
-		return(null);
+		long lCount;
+		Session objSession = getSessionFactory().openSession();
+		
+		lCount = ((Number)(objSession.createCriteria(Individual.class).setProjection(Projections.rowCount()).uniqueResult())).longValue();
+		
+		return(lCount);
 	}
 	
 	protected SessionFactory getSessionFactory()
@@ -60,7 +65,7 @@ public class IndividualDAOImpl implements IndividualDAO
 		List<Individual> lstIndividuals;
 		Session objSession = getSessionFactory().openSession();
 		
-		lstIndividuals = objSession.createQuery("from Person").list();
+		lstIndividuals = objSession.createQuery("from Individual").list();
 		
 		objSession.close();
 		

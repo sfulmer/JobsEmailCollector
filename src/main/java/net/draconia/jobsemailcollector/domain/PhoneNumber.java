@@ -26,6 +26,7 @@ public class PhoneNumber extends Observable implements Serializable
 	@Column(columnDefinition="text", insertable=true, name="PhoneNumber", nullable=false, updatable=true)
 	private String msPhoneNumber;
 	
+	@Column(name="Individual")
 	@JoinColumn(name="Individual")
 	private Individual mObjIndividual;
 	
